@@ -1,0 +1,3264 @@
+{
+  "name": "REA Whatsapp",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chatwoot2",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -2624,
+        368
+      ],
+      "id": "49956392-0b15-4312-8962-05d7341f0e0b",
+      "name": "Webhook",
+      "webhookId": "a83a92f4-0333-4732-a371-f5c03956a440"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bcbf739a-ec69-4d44-b5bc-4eee21048a03",
+              "name": "text_raw",
+              "value": "={{ $json.body.content }}",
+              "type": "string"
+            },
+            {
+              "id": "067fed80-93b7-4e9f-96bd-789ff54a6cf0",
+              "name": "messageType",
+              "value": "={{\n  $json.body.attachments?.[0]?.file_type\n  ? $json.body.attachments[0].file_type   // \"audio\", \"image\", \"file\", etc.\n  : 'text'\n}}",
+              "type": "string"
+            },
+            {
+              "id": "c54b220c-79ea-4d8f-a43b-7eb2e16f8ff5",
+              "name": "id_sender",
+              "value": "={{ $json.body.conversation.messages[0].sender.phone_number }}",
+              "type": "string"
+            },
+            {
+              "id": "9e582020-6417-4173-8ec4-70881efe6c45",
+              "name": "wa_souce_id",
+              "value": "={{ $json.body.conversation.contact_inbox.source_id }}",
+              "type": "string"
+            },
+            {
+              "id": "874cca1f-a99a-4f40-b3c6-8730e01cda55",
+              "name": "account_id",
+              "value": "={{ $json.body.account.id }}",
+              "type": "number"
+            },
+            {
+              "id": "e5fd892e-e02a-4f05-88fe-afa8cb9f2efa",
+              "name": "conversationId",
+              "value": "={{ $json.body.conversation.contact_inbox.id }}",
+              "type": "number"
+            },
+            {
+              "id": "8b56a2c4-fc93-4c13-9beb-ffcba2d28ef7",
+              "name": "file_URL",
+              "value": "={{ $json.body.attachments[0].data_url }}",
+              "type": "string"
+            },
+            {
+              "id": "fcb9e41d-2d50-4725-8a83-ff72754962f9",
+              "name": "date_time",
+              "value": "={{ new Date($json.body.conversation.messages[0].created_at * 1000).toISOString() }}",
+              "type": "string"
+            },
+            {
+              "id": "445e7d16-3884-4d9d-9f75-0526ab96ca44",
+              "name": "label",
+              "value": "={{ !!((($json.body?.conversation?.labels) || []).includes('human_handling')) }}",
+              "type": "boolean"
+            },
+            {
+              "id": "70ad9110-2808-438f-851e-bd93ac3270b9",
+              "name": "date_time_real",
+              "value": "={{   new Date($json.body.conversation.messages[0].created_at * 1000)     .toLocaleString('es-MX', { timeZone: 'America/Mexico_City' }) }}",
+              "type": "string"
+            },
+            {
+              "id": "13382530-cfd4-4a4b-8918-e0fbbbdaeed4",
+              "name": "contact_name",
+              "value": "=",
+              "type": "string"
+            },
+            {
+              "id": "81d3183b-9a70-4ca7-9444-7ce88309f435",
+              "name": "has_real_name",
+              "value": "={{\n(() => {\n  const name = String($json.body.conversation.meta.sender.name || '').trim();\n  const phone = String($json.body.conversation.meta.sender.phone_number || '').trim();\n  if (!name) return false;\n\n  const norm = s => s.replace(/[\\s()-]/g,'');\n  const looksPhone = /^[+]?[\\d]{7,}$/.test(norm(name));      // puro número (con +)\n  const sameAsPhone = norm(name) === norm(phone);\n\n  return !(looksPhone || sameAsPhone);\n})()\n}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "ignoreConversionErrors": false
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2416,
+        368
+      ],
+      "id": "f1ba13fc-e016-4322-a522-6488f61635b6",
+      "name": "Mapear datos",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.messageType }}",
+                    "rightValue": "audio",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "7d186a02-946e-4fdd-9d80-f6a823c64d74"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Voice"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "93559e76-a12a-4e5c-97a1-fd872bd51327",
+                    "leftValue": "={{ $json.messageType }}",
+                    "rightValue": "text",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a99d7461-1552-463b-a864-b22d1777e712",
+                    "leftValue": "={{ $json.messageType }}",
+                    "rightValue": "image",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Image"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "78b7aab3-ba66-478b-a292-3f6a6c948951",
+                    "leftValue": "={{ $json.messageType }}",
+                    "rightValue": "file",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "File"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -1760,
+        368
+      ],
+      "id": "90124f4a-af7a-4660-8129-91f8e631e17a",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "aa48b36e-32a1-4b65-a1e9-dc0d940edcf1",
+              "leftValue": "={{ $('Webhook').item.json.body.message_type }}",
+              "rightValue": "incoming",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2208,
+        368
+      ],
+      "id": "7bfb5533-3623-4159-b6a7-5a367069656b",
+      "name": "¿Es mensaje entrante?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b07077dc-5641-4175-8dc1-faf1f795c679",
+              "name": "mensaje",
+              "value": "={{ $json.text_raw }}",
+              "type": "string"
+            },
+            {
+              "id": "6d12855b-0a75-4503-aa72-d170decec796",
+              "name": "sender",
+              "value": "={{ $('Mapear datos').item.json.id_sender }}",
+              "type": "string"
+            },
+            {
+              "id": "7c52306c-7d88-484e-9bb7-25de29cf5ed9",
+              "name": "account_id",
+              "value": "={{ $json.account_id }}",
+              "type": "string"
+            },
+            {
+              "id": "6536ff94-3404-4167-926d-7990e91fe104",
+              "name": "conversation_id",
+              "value": "={{ $json.conversationId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -912,
+        384
+      ],
+      "id": "6da9451f-394c-4aee-b103-55cf38c48bf1",
+      "name": "Mapeo de mensaje"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ JSON.parse($json.message.last()).session_Id }}",
+                    "rightValue": "={{ $('Mapeo de mensaje').item.json.sender }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
+                    },
+                    "id": "0cd0ed98-1444-4802-b404-effe56a40153"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Ignorar"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f9f2998c-0a92-4e96-b767-eb7bfccbcdcc",
+                    "leftValue": "={{ DateTime.fromISO(JSON.parse($json.message.last()).date_time) }}",
+                    "rightValue": "={{ $now.minus(10, 'seconds').toLocal() }}",
+                    "operator": {
+                      "type": "dateTime",
+                      "operation": "before"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Continuar"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "Esperar"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -1296,
+        800
+      ],
+      "id": "e8f3e08f-640c-406b-b56a-6e34ef092984",
+      "name": "Switch2"
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -1072,
+        992
+      ],
+      "id": "47ab1ac1-e220-4230-ae8d-d549322f51dc",
+      "name": "Wait",
+      "webhookId": "0cf3cc3c-2df8-4c18-9fef-0efd9fd99ca6"
+    },
+    {
+      "parameters": {
+        "content": "# Memoria\n## Recibir mensajes simultáneos 5 seg de espera\n",
+        "height": 556,
+        "width": 1088,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1824,
+        624
+      ],
+      "id": "b0a11182-9e68-4b15-abae-2378b1580a97",
+      "name": "Sticky Note13"
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "={{ $json.sender }}",
+        "messageData": "={{ JSON.stringify(\n  {\n    \"message\": $json.mensaje,\n    \"session_Id\": $json.sender,\n    \"date_time\": $('Mapear datos').item.json.date_time\n  }\n) }}",
+        "tail": true
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -1776,
+        816
+      ],
+      "id": "4677db34-2071-4a39-bb9c-8051cd0f6c28",
+      "name": "Buffer",
+      "credentials": {
+        "redis": {
+          "id": "VM8wo0SXwNY8vayR",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "message",
+        "key": "={{ $('Mapeo de mensaje').item.json.sender }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -1616,
+        816
+      ],
+      "id": "1f83f888-2c61-46ae-8a14-024e7025d3b4",
+      "name": "Get_buffer_data",
+      "credentials": {
+        "redis": {
+          "id": "VM8wo0SXwNY8vayR",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -1072,
+        656
+      ],
+      "id": "d78675cd-1660-4965-abf4-95688c980c36",
+      "name": "No Operation, do nothing2"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $('Mapeo de mensaje').item.json.sender }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -1072,
+        816
+      ],
+      "id": "a2769f18-e06b-4352-b809-a649d91ad29d",
+      "name": "Delete_buffer",
+      "credentials": {
+        "redis": {
+          "id": "VM8wo0SXwNY8vayR",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Recepción de mensaje\n## Texto + Audio\n\n",
+        "height": 476,
+        "width": 1920,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2656,
+        128
+      ],
+      "id": "cddc1618-8860-440c-b8f8-9da9fd6a318c",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8bb8d848-627d-4fbc-84bc-632dc635878b",
+              "name": "message",
+              "value": "={{ Array.isArray($json.message) ? $json.message : [] }}",
+              "type": "array"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1456,
+        816
+      ],
+      "id": "9710eadf-d214-42e7-a2e0-f8ebb4aeab8f",
+      "name": "Normalize message"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.file_URL }}",
+        "options": {
+          "redirect": {
+            "redirect": {}
+          },
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "=audio"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1504,
+        224
+      ],
+      "id": "c707fbc7-9fe2-4766-9bb6-54610ddf59fc",
+      "name": "Get Audio"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "binaryPropertyName": "audio",
+        "options": {
+          "language": "es"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -1312,
+        224
+      ],
+      "id": "f3026e33-3ffb-462d-98c8-8828bed791da",
+      "name": "Audio a texto",
+      "credentials": {
+        "openAiApi": {
+          "id": "oHOyfcbfxvKeb6YW",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b07077dc-5641-4175-8dc1-faf1f795c679",
+              "name": "text_raw",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "0308147c-0983-4cb2-9d85-cb9aa8fe7453",
+              "name": "account_id",
+              "value": "={{ $('Switch').item.json.account_id }}",
+              "type": "string"
+            },
+            {
+              "id": "10ac1855-af15-4d66-8554-f25181862840",
+              "name": "conversationId",
+              "value": "={{ $('Switch').item.json.conversationId }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1120,
+        224
+      ],
+      "id": "df376d67-5146-4a31-bd81-d52f5eabda13",
+      "name": "Texto"
+    },
+    {
+      "parameters": {
+        "content": "# ✨ Agente Inmobiliario",
+        "height": 1052,
+        "width": 924,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        400,
+        128
+      ],
+      "id": "f5f38ea2-c373-4c11-a24e-d84e5b74d6f8",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7e571dd3-ada9-4b85-b003-8a9fcb02127e",
+              "leftValue": "={{ $json.label }}",
+              "rightValue": "human_handling",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2016,
+        224
+      ],
+      "id": "f9071c33-3c0b-4750-9144-0385c99f85e8",
+      "name": "Control humano?"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -1776,
+        208
+      ],
+      "id": "023f8cd8-4b47-4a99-a192-6cd690bfa555",
+      "name": "No responde el Agente"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -2016,
+        432
+      ],
+      "id": "47d3c4dc-4e5f-4ffd-8135-6753a7949192",
+      "name": "Mensaje saliente del agente"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7e571dd3-ada9-4b85-b003-8a9fcb02127e",
+              "leftValue": "={{ $json.mensaje }}",
+              "rightValue": "/reset",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": "={{ false }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -752,
+        -80
+      ],
+      "id": "b0c72d1e-2963-4ae5-8637-e314e13ba330",
+      "name": "RESET"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://YOUR_CHATWOOT_HOST/api/v1/accounts/{{ $('Mapear datos').item.json.account_id }}/conversations/{{ $('Mapear datos').item.json.conversationId }}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api_access_token",
+              "value": "YOUR_CHATWOOT_TOKEN"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "content",
+              "value": "=Memoria eliminada correctamente."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        608,
+        -368
+      ],
+      "id": "dfdaa072-a63c-4b5d-aa77-69ae6d58ea67",
+      "name": "Confirmación RESET",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "n8n_chat_histories",
+          "mode": "list",
+          "cachedResultName": "n8n_chat_histories"
+        },
+        "deleteCommand": "delete",
+        "where": {
+          "values": [
+            {
+              "column": "session_id",
+              "value": "={{ $('Mapeo de mensaje').item.json.sender.replace('+', '') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -352,
+        -320
+      ],
+      "id": "2910f75f-f855-4dd2-a94a-c53d317e1d96",
+      "name": "Delete table or rows",
+      "credentials": {
+        "postgres": {
+          "id": "OHZokS2F9VExHQSj",
+          "name": "Postgres Inmobiliaria Demo"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "=re_state:{{ $('Mapeo de mensaje').item.json.sender.replace('+', '') }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -544,
+        -320
+      ],
+      "id": "34cdeb3b-570e-4f94-8acf-a39c84b2f153",
+      "name": "Delete_buffer2",
+      "credentials": {
+        "redis": {
+          "id": "VM8wo0SXwNY8vayR",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "73b5b71c-8802-48a7-bfa1-117c972c6bdb",
+              "name": "text",
+              "value": "={{ $json.message.map(m => JSON.parse(m).message).join('\\n') }}",
+              "type": "string"
+            },
+            {
+              "id": "7b324c7c-42f9-4fd4-9240-8cc693431aa2",
+              "name": "session_Id",
+              "value": "={{ $('Mapeo de mensaje').item.json.sender }}",
+              "type": "string"
+            },
+            {
+              "id": "e59d16e2-6f90-44b6-8cb3-1e661b0bf151",
+              "name": "account_Id",
+              "value": "={{ $('Mapeo de mensaje').item.json.account_id }}",
+              "type": "string"
+            },
+            {
+              "id": "08a966c9-f57c-4848-b847-852174d14047",
+              "name": "conversation_Id",
+              "value": "={{ $('Mapeo de mensaje').item.json.conversation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "13780043-8b0d-44b9-9c4d-c48ca5071f49",
+              "name": "timestamp",
+              "value": "={{ $now.setZone('America/Mexico_City').toFormat('yyyy-MM-dd HH:mm:ss') }}",
+              "type": "string"
+            },
+            {
+              "id": "b3faf4da-dfca-4107-aa92-22dba4d42a1f",
+              "name": "session_Id_limpio",
+              "value": "={{ $('Mapeo de mensaje').item.json.sender.replace('+', '') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -864,
+        816
+      ],
+      "id": "1294dcb9-2a0a-4bbf-90e7-d07b37403136",
+      "name": "Concatenar2"
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "options": {
+          "responseFormat": "json_object",
+          "temperature": 0.6
+        }
+      },
+      "id": "8f261716-498a-4ccf-864f-0f1c9f2b8d38",
+      "name": "model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.1,
+      "position": [
+        528,
+        544
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "oHOyfcbfxvKeb6YW",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "YOUR_CALENDAR_ID@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "Sales Agent"
+        },
+        "start": "={{ $fromAI('StartDate') }}",
+        "end": "={{ $fromAI('EndDate') }}",
+        "additionalFields": {
+          "description": "={{ $fromAI('summary') }}",
+          "summary": "=Visita de {{ $fromAI('name')}}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        976,
+        1024
+      ],
+      "id": "4ac52f01-302b-41ca-bf13-b3695e3e0e75",
+      "name": "crear_cita",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "UER2JhjzpJB7W5WM",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "YOUR_CALENDAR_ID@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "Sales Agent"
+        },
+        "timeMin": "={{ $fromAI('StartDate') }}",
+        "timeMax": "={{ DateTime.fromISO($fromAI('EndtDate')).plus({ days: 7 }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1200,
+        1024
+      ],
+      "id": "93f6675c-e357-4ea3-b1a7-19efa2941498",
+      "name": "ver_eventos",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "UER2JhjzpJB7W5WM",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "calendar": {
+          "__rl": true,
+          "value": "YOUR_CALENDAR_ID@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "Sales Agent"
+        },
+        "eventId": "={{ $fromAI('Event_ID', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1088,
+        1024
+      ],
+      "id": "dc0044eb-8058-4e11-908c-3d3f4a43d7fc",
+      "name": "eliminar_cita",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "UER2JhjzpJB7W5WM",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "=Agente especializado que:\n1. Consulta propiedades en la base de datos según filtros\n2. Muestra fotos adicionales de propiedades",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {
+          "systemMessage": "=## ROL\nEres un agente especializado en:\n1. Consultar la herramienta \"Propiedades\" para recomendar inmuebles según las preferencias del usuario\n2. Mostrar fotos adicionales de propiedades cuando el usuario lo solicite\n3. SIEMPRE mostrar 3 propiedades para dar opciones al cliente\n4. Mantener un espíritu vendedor positivo y proactivo\n\n## HERRAMIENTAS DISPONIBLES\n### Propiedades\n- Buscar propiedades por filtros (operacion, zona, precio, tipo, amenidades, etc.)\n- Obtener URLs de imágenes adicionales por ID de propiedad\n\n## ESTRATEGIA DE BÚSQUEDA (IMPORTANTE)\n### Primera búsqueda - Filtros estrictos:\nBusca propiedades que cumplan TODOS los criterios del usuario (operación, tipo, zona, presupuesto, recámaras, amenidades)\n\n### Si encuentras 3+ propiedades: \nMuestra las 3 mejores opciones\n\n### Si encuentras 1-2 propiedades:\nCompleta hasta 3 propiedades haciendo una SEGUNDA búsqueda más flexible que:\n- MANTIENE obligatoriamente: tipo_operacion (Venta/Renta/Preventa) y tipo_propiedad (Casa/Departamento)\n- FLEXIBILIZA: zona (busca zonas cercanas o similares), rango de precio (±20%), número de recámaras (±1), amenidades\n\n**Ejemplo:** Si el usuario busca \"Casa en VENTA en Providencia, 3 recámaras, $5M\" y solo hay 1:\n- Muestra esa 1 propiedad primero\n- Completa con 2 casas más EN VENTA (mantiene operación y tipo) pero en Chapalita o Guadalajara Centro, o con 2-4 recámaras, o hasta $6M\n\n### Si no encuentras ninguna propiedad:\nHaz búsqueda flexible manteniendo tipo_operacion y tipo_propiedad, y muestra 3 alternativas cercanas\n\n## TONO Y ACTITUD\n- SIEMPRE positivo y entusiasta\n- NUNCA te disculpes por \"no tener lo exacto\"\n- NUNCA digas \"solo encontré 1\" o \"lamentablemente solo tenemos\"\n- En su lugar usa frases como:\n  * \"Te muestro 3 excelentes opciones...\"\n  * \"Aquí están las mejores propiedades disponibles...\"\n  * \"Estas propiedades podrían interesarte...\"\n  * \"He encontrado estas opciones que se ajustan a lo que buscas...\"\n\n## FORMATO DE PRESENTACIÓN\nAl mostrar propiedades, usa este formato para cada una (enumeradas):\n\n1) 🏠 {Tipo (Casa/Departamento)} en {Venta/Renta/Preventa} en {Zona/Ciudad/Colonia}\n  - ID: {ID Propiedad}\n  - Precio: {precio}\n  - Recámaras: {no. recámaras}\n  - Baños: {no. baños}\n  - Terreno: {m²}\n  - Amenidades: {amenidades}\n  - Dirección: {dirección}\n  - Sitio web: {URL completa sin formato}\n  - Link Imagen: {URL completa - solo 1 link aquí}\n\n## REGLAS PARA IMÁGENES ADICIONALES\nCuando te pidan mostrar más imágenes de una propiedad:\n1. Identifica el ID de la propiedad (ej. \"P001\", \"P012\")\n2. Consulta la herramienta \"Propiedades\" para obtener las URLs\n3. Devuelve los links en este formato:\n\n[Imagen 1](Link1)\n[Imagen 2](Link2)\n...\n[Imagen 5](Link5)\n\n## REGLAS PARA URLs\n- Muestra ÚNICAMENTE URLs completas sin formato adicional\n- NO uses corchetes para enlaces de propiedades: [Ver aquí] ❌\n- SÍ usa corchetes solo para listas de imágenes: [Imagen 1](url) ✓\n\n## NOTAS FINALES\n- IDs de propiedades: \"P001\", \"P002\", \"P009\", \"P012\", etc.\n- OBLIGATORIO: Siempre devolver exactamente 3 propiedades\n- Prioriza la herramienta \"Propiedades\" para búsquedas y fotos\n- Si la primera búsqueda no da 3 resultados, amplía criterios automáticamente"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        688
+      ],
+      "id": "c39009f3-e178-4f7f-adae-204e1421f1ec",
+      "name": "Base_de_datos"
+    },
+    {
+      "parameters": {
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {
+          "systemMessage": "=Tienes como objetivo gestionar las citas de los usuarios que quieran agendar una cita de visita en alguna propiedad el día y hora que solicite antes revisando los eventos programados para verificar si existe disponibilidad.\n\n## Agenda de citas\n- Cada evento que programes tiene una duración de 1 hora. No se lo menciones al usuario.\n- Antes de agendar, Siempre revisa disponibilidad.\n- No sobrepongas eventos en el calendario, no tiene que haber dos eventos cuyas horas de duración se mezclen en el calendario, si el evento que quiere el usuario coincide con la hora de inicio, final o el transcurso de otro, recomiéndale la hora más cercana dentro de los horarios establecidos.\n- Requisitos para agendar: Nombre completo, correo electrónico y fecha y hora en la que quiere que se haga su prueba.\n- Solo pueden agendar de lunes a sábado de 9:00am a 6:00pm. No permitas que agenden fuera de ese horario, tampoco permitas agendar citas si el término del servicio será después del horario establecido.\n- También puedes cancelar citas si el cliente te lo pide.\n- El usuario puede pedir disponibilidad cierto día, si lo hace primero pregunta en qué horario le gustaría tener su prueba y solo responde si hay o no, y si no hay recomiéndale una hora cercana, sin pedir sus datos y sin agendar, solo consultando disponibilidad. Si quiere agendar después de eso ahora si pide la información y agenda la cita dentro de los horarios establecidos.\n- Cuando le das las horas recomendadas al usuario y vuelve a preguntar por otra hora, vuelve a revisar disponibilidad dentro de los horarios establecidos.\n- No agendes ninguna cita antes de la fecha actual, considera que hoy es {{ $now.setZone(\"America/Mexico_City\") }}.\n\n## Tono de conversación\n- Amigable, cálido, servicial y humano (no “robot”).\n- Emojis ligeros opcionales: máximo 1 emoji por mensaje (🏠😊👌📄📅).\n- NO uses expresiones de saludo en los mensajes como \"Hola\", \"Mucho gusto\". Trata la conversación como continuación de otra. \n\n## Herramientas disponibles\n\n- crear_cita: Usa esta herramienta cuando el usuario haya proporcionado sus datos; nombre, apellido, servicio, día y hora para agendar la cita.\n\n- eliminar_cita: Usa esta herramienta cuando el usuario exprese que quiere cancelar o reagendar su cita.\n\n- ver_eventos: Utiliza esta herramienta para saber cuál es el evento que el usuario quiere eliminar o modificar o para verificar disponibilidad el día o días que le interesan al usuario.\n\n## Reglas crear_cita:\n- Al crear un evento OBLIGATORIO:\n  1) El Titulo del Evento debe decir:\n    - Visita de {nombre del usuario/cliente} - {ID de la propiedad (ej. \"P001\", \"P012\", etc)}\n  2) El Summary del evento debe decir:\n    - Nombre: {nombre y apellido del usuario cliente} (OBLIGATORIO)\n    - Teléfono: {teléfono del usuario} (OBLIGATORIO)\n    - Correo: {correo del usuario} (opcional)\n    - Propiedad: {ID de la propiedad} (OBLIGATORIO)\n    - Notas: {Notas/comentarios de las preferencias del usuario ej. \"Busca departamento en {venta/renta} en {zona/ciudad}, con presupuesto $XXX y X recámaras\"\n    \n- NO incluyas el link/enlace del evento del calendario\n- El ID de la propiedad de interés debe de ir en formato tipo \"P001\", \"P005\", \"P012\", etc.\n\n## Notas Confirmación de cita\n- Cuando la cita se haya creado correctamente, confirmale al usuario los detalles de la cita agendada con el siguiente formato:\n\n📅 Tu visita ha sido agendada con éxito para la/el {tipo (casa/departamento)} en {zona} el día {día} a la/las {hora} am/pm. Te esperamos! 😊\n📍Dirección: {dirección de la propiedad elegida}\n\n**OJO** NO menciones el ID de la propiedad en el mensaje de confirmación de cita.\n\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        816,
+        688
+      ],
+      "id": "277d94f8-8e99-435d-9867-df94b5824548",
+      "name": "Agendador"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=## Fecha actual:\nHoy es {{ $now }} ({{ $now.weekdayLong }} {{ $now.hour }}:{{ $now.minute }}).\n\n## Información del lead\n- session_Id: {{$json.session_Id}}\n- lead_row_number: {{ $json.lead_row_number }}\n- es_lead_nuevo: {{ $json.es_lead_nuevo }}\n- nombre_lead: {{ $json.nombre_lead }}\n\n## Mensaje del usuario:\n{{ $json.text }}",
+        "options": {
+          "systemMessage": "=## Rol y objetivo\n\nEres un agente inmobiliario experto en ventas para **Mercado Casas y Depas**, amable y profesional. Tu meta es:\n\n- Guiar la conversación con preguntas claras y breves.\n- Pedir datos de contacto y preferencias de vivienda (zona/colonia/ciudad, presupuesto, # de habitaciones, amenidades).\n- Con esa información, entregar 3 recomendaciones usando únicamente los datos recibidos de la herramienta Base_de_datos.\n- Si el usuario lo desea, agendar una cita para visitar la propiedad.\n\nSi faltan datos clave, pídelos con cortesía (no inventes nada).\n\n**Fuente de verdad**: Solo usa datos reales de las herramientas disponibles. Nunca inventes propiedades ni precios.\n\n**Nota importante**: El teléfono del usuario viene en el campo session_Id del input. Úsalo como datos_cliente.telefono desde el inicio y NO lo pidas.\n\n---\n\n## Reglas de conversación\n- Amigable, cálido, servicial y humano (no \"robot\").\n- 100% espíritu vendedor buena onda, siempre recomendando propiedades.\n- Si es primer contacto o saludo, da una bienvenida breve a **Mercado Casas y Depas**.\n- Emojis ligeros opcionales: máximo 1 emoji por mensaje (🏠😊👌📄📅).\n- Haz un máximo de 2 preguntas por turno.\n- Confirma lo entendido antes de recomendar.\n- Si el usuario ya dio un dato, no lo pidas de nuevo.\n- Si dice \"no sé\" en presupuesto, ofrece rangos: \"<$3M | $3–6M | $6–10M | >$10M\".\n- El nombre pregúntalo de forma casual después de 2-3 intercambios, con frases como: \"Por cierto! Aún no sé tu nombre 😊\" o \"Por cierto, ¿cómo te llamas?\".\n- Si pide hablar con humano, marca requiere_agente_humano=true y pide un medio de contacto.\n- Usa expresiones como: \"Claro!\", \"Por supuesto!\", \"Esa propiedad es excelente!\", \"Excelente elección!\", etc.\n- SIEMPRE pregunta primero si busca RENTA, VENTA o PREVENTA antes de filtrar propiedades. Este dato es obligatorio.\n- En tus respuestas \"reply\" hacia el usuario, NUNCA menciones el ID de la propiedad (ej. \"...ID P012\") que estás mostrando o que estas haciendo referencia.\n\n---\n\n## Flujo sugerido (pasos)\n\n1. **Bienvenida** → confirmar disponibilidad para ayudar.\n2. **Preferencias** → PRIMERO operación (renta/venta/preventa), LUEGO tipo de propiedad (casa, departamento), zona/ciudad, presupuesto, # habitaciones, amenidades deseadas.\n3. **Confirmación** → repetir resumen y pasar a paso 4.\n4. **Recomendación** → mostrar hasta 3 opciones de propiedades que mejor coincidan.\n5. **Detalles** → ofrecer enviar más fotos de alguna propiedad y preguntar de cuál. Pedir nombre si no lo has hecho.\n6. **Cierre** → confirmar nombre si no lo has pedido, ofrecer visita/llamada y pedir disponibilidad de horario.\n\n---\n\n## Manejo de información del Lead\n\n### Lead existente (es_lead_nuevo = false):\n- El usuario ya tiene un registro previo.\n- Tienes acceso a: nombre_lead, lead_row_number.\n- Si el nombre está disponible, úsalo en la conversación de forma natural.\n\n### Lead nuevo (es_lead_nuevo = true):\n- Es la primera vez que el usuario interactúa.\n- NO tienes nombre previo (nombre_lead estará vacío).\n- Debes recopilar gradualmente: nombre, preferencias de propiedad, etc.\n- El teléfono ya está en session_Id, no lo pidas.\n\n---\n\n## Herramientas disponibles\n\n### Base_de_datos\n1. **Buscar propiedades**: Utiliza esta herramienta para buscar propiedades cuando ya tengas todos los filtros necesarios en \"preferencias\". El agente consultará la base de datos y te devolverá resultados. Si no hay coincidencias exactas, pide las más parecidas o una recomendación.\n\n2. **Ver más fotos**: Utiliza esta herramienta cuando el usuario quiera ver más fotos de alguna recomendación. El agente buscará la propiedad por ID y devolverá los links de las imágenes.\n\n### Agendador\nUtiliza esta herramienta para agendar, consultar y cancelar citas de visita a propiedades.\n\n---\n\n## Reglas de interpretación de presupuesto\n\n| Caso | Ejemplo del usuario | presupuesto_min | presupuesto_max |\n|------|---------------------|-----------------|-----------------|\n| Número exacto | \"3 millones\", \"más o menos 3M\" | número × 0.9 | número × 1.1 |\n| Rango explícito | \"Entre 1 y 1.5 millones\" | 1000000 | 1500000 |\n| Límite superior | \"Máximo 4M\", \"Hasta 4M\" | número ÷ 2 | 4000000 |\n| Límite inferior | \"Mínimo 5M\", \"Desde 5M\" | 5000000 | número × 2 |\n| No sabe | \"No sé\", \"Depende\" | null | null |\n\n**IMPORTANTE:** Todos los números deben estar sin comas, puntos ni símbolos (ejemplo: 3000000, no \"3,000,000\" ni \"$3M\").\n\n---\n\n## Formato de salida JSON (OBLIGATORIO)\n\nDevuelve ÚNICAMENTE este JSON válido:\n```json\n{\n  \"reply\": \"Tu respuesta al usuario aquí\",\n  \"intencion\": \"bienvenida|toma_contacto|toma_preferencias|confirmacion|recomendacion|detalles|cierre|derivar_humano|pregunta_general\",\n  \"paso\": \"1|2|3|4|5|6\",\n  \"requiere_agente_humano\": false,\n  \"datos_cliente\": {\n    \"lead_row_number\": null, // Obligatorio\n    \"nombre\": null,\n    \"telefono\": null,\n    \"email\": null\n  },\n  \"preferencias\": {\n    \"operacion\": null, \n    \"tipo\": null,\n    \"zona\": null,\n    \"presupuesto_min\": null,\n    \"presupuesto_max\": null,\n    \"habitaciones_min\": null,\n    \"habitaciones_max\": null,\n    \"amenidades_deseadas\": [],\n    \"notas_adicionales\": null\n  },\n  \"recomendaciones\": [\n    {\n      \"ID\": \"string\",\n      \"tipo\": \"string\",\n      \"ciudad\": \"string\",\n      \"recamaras\": 0,\n      \"baños\": 0,\n      \"zona\": \"string\",\n      \"precio\": 0,\n      \"amenidades\": \"string\",\n      \"url_imagen\": \"string\"\n    }\n  ]\n}\n```\n\n### Notas sobre el JSON:\n- **lead_row_number**: Mantén el valor que recibiste en el input. Si es lead nuevo, usa el row_number del lead recién creado.\n- **datos_cliente**: Actualiza estos campos conforme el usuario los proporcione.\n- **preferencias**: Actualiza conforme el usuario indique sus preferencias.\n- **recomendaciones**: Array vacío hasta que uses Base_de_datos. Después, incluye máximo 3 propiedades.\n- **notas_adicionales**: Captura preferencias cualitativas como \"cerca del trabajo\", \"zona tranquila\", \"para familia con niños\", \"cerca del Tec de Monterrey\", etc.\n\n---\n\n## Formato para mostrar recomendaciones en \"reply\"\n```\n1) 🏠 {Tipo} en {Operación} en {Zona/Ciudad}\n- Precio: {precio}\n- Recámaras: {número}\n- Baños: {número}\n- Terreno: {m²}\n- Amenidades: {lista}\n- Dirección: {dirección}\n- Sitio web: {URL completa}\n- Link Imagen: {URL completa}\n```\n\n### REGLAS ESTRICTAS para URLs:\n✅ **Correcto:**\n- Sitio web: https://mercadocasasydepas.com/directory/residencia-en-providencia/\n- Link Imagen: https://drive.google.com/YOUR_FOLDER_URL"
+        }
+      },
+      "id": "dd4133fb-7462-4dc6-a1ad-b1ee1208965c",
+      "name": "Agente REA",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.6,
+      "position": [
+        640,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.session_Id }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        720,
+        1024
+      ],
+      "id": "ff6b608c-4b68-4c0e-bff9-7ba53490e0da",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "OHZokS2F9VExHQSj",
+          "name": "Postgres Inmobiliaria Demo"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "batchSize": "=1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1392,
+        816
+      ],
+      "id": "f89af92e-35d8-4974-9301-a321652c2a5e",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6fe9e854-84dc-4d28-be2a-31115b9f10bf",
+              "name": "text",
+              "value": "={{ $json.message }}",
+              "type": "string"
+            },
+            {
+              "id": "a01911a8-fbfd-4261-9b21-2cfbcc74e056",
+              "name": "account_id",
+              "value": "={{ $('Set Input').item.json.account_Id }}",
+              "type": "string"
+            },
+            {
+              "id": "b813627c-0503-495b-93cf-8df898115a64",
+              "name": "conversation_Id",
+              "value": "={{ $('Set Input').item.json.conversation_Id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1600,
+        832
+      ],
+      "id": "f552e890-cc3e-4afb-85df-70d21bef5243",
+      "name": "Input"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://YOUR_CHATWOOT_HOST/api/v1/accounts/{{ $('Input').item.json.account_id }}/conversations/{{ $('Input').item.json.conversation_Id }}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api_access_token",
+              "value": "YOUR_CHATWOOT_TOKEN"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "content",
+              "value": "={{ $json.text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2240,
+        832
+      ],
+      "id": "0b7572a3-cfa8-487b-a269-8aa69870aa4b",
+      "name": "Send Respuesta"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2e098e59-f733-48a6-8e94-80674057cd3b",
+              "leftValue": "={{ $json.text }}",
+              "rightValue": "drive.google.com/file/d/",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1792,
+        832
+      ],
+      "id": "347983df-15a3-47fd-bf1e-6d2b7b0b0be4",
+      "name": "Imagen?"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Code node — Run Once for All Items\n// Detecta automáticamente si es una lista de imágenes o texto con imagen única\n// Caso 1: Texto descriptivo + link único → separa en text_clean + image_link\n// Caso 2: Lista de imágenes múltiples → crea un item por cada link\n\nconst items = $input.all();\nconst out = [];\n\nfor (const item of items) {\n  const text = item.json?.text ?? '';\n  \n  // Encontrar TODOS los links de Drive en el texto\n  // Patrón 1: [Texto](url) - formato markdown\n  const markdownLinksPattern = /\\[([^\\]]*)\\]\\((https?:\\/\\/drive\\.google\\.com[^\\)]+)\\)/gi;\n  const markdownMatches = [...text.matchAll(markdownLinksPattern)];\n  \n  // Patrón 2: - Imagen N: url - formato de lista simple\n  const simpleLinksPattern = /-\\s*(?:Imagen|Image)\\s*\\d+\\s*:\\s*(https?:\\/\\/drive\\.google\\.com[^\\s\\n]+)/gi;\n  const simpleMatches = [...text.matchAll(simpleLinksPattern)];\n  \n  // Patrón 3: - Link Imagen: url - formato en descripción de propiedad\n  const linkImagenPattern = /-\\s*Link\\s+(?:Imagen|Image)\\s*:\\s*(https?:\\/\\/drive\\.google\\.com[^\\s\\n]+)/gi;\n  const linkImagenMatches = [...text.matchAll(linkImagenPattern)];\n  \n  // Combinar todos los tipos de matches\n  let allMatches = [];\n  \n  if (markdownMatches.length > 0) {\n    allMatches = markdownMatches.map(m => ({ label: m[1], url: m[2], type: 'markdown' }));\n  } else if (linkImagenMatches.length > 0) {\n    allMatches = linkImagenMatches.map((m, i) => ({ label: 'Link Imagen', url: m[1], type: 'linkImagen' }));\n  } else if (simpleMatches.length > 0) {\n    allMatches = simpleMatches.map((m, i) => ({ label: `Imagen ${i + 1}`, url: m[1], type: 'simple' }));\n  }\n  \n  if (allMatches.length === 0) {\n    // No hay links, retornar el texto tal cual\n    out.push({\n      json: {\n        text_clean: text,\n        image_link: null,\n        is_image_list: false,\n        ...item.json\n      }\n    });\n    continue;\n  }\n  \n  // Detectar si es una lista de imágenes\n  // Criterio: múltiples links Y el texto sin links es mínimo\n  let textWithoutLinks = text\n    .replace(/\\d+\\.\\s*\\[([^\\]]*)\\]\\(https?:\\/\\/[^\\)]+\\)\\s*/gi, '') // 1. [Imagen](url)\n    .replace(/\\[([^\\]]*)\\]\\(https?:\\/\\/[^\\)]+\\)\\s*/gi, '') // [Imagen 1](url)\n    .replace(/-\\s*(?:Imagen|Image)\\s*\\d+\\s*:\\s*https?:\\/\\/[^\\s\\n]+\\s*/gi, '') // - Imagen N: url\n    .replace(/-\\s*Link\\s+(?:Imagen|Image)\\s*:\\s*https?:\\/\\/[^\\s\\n]+\\s*/gi, '') // - Link Imagen: url\n    .trim();\n  \n  const isImageList = allMatches.length > 1 && textWithoutLinks.length < 50;\n  \n  if (isImageList) {\n    // CASO 2: Lista de imágenes - crear un item por cada link\n    allMatches.forEach((match, index) => {\n      out.push({\n        json: {\n          text_clean: \"\", // String vacío - no enviar texto con cada imagen\n          image_link: match.url,\n          image_index: index + 1,\n          total_images: allMatches.length,\n          is_image_list: true,\n          // Copiar otros campos del item original excepto 'text'\n          ...(({ text, ...rest }) => rest)(item.json)\n        }\n      });\n    });\n  } else {\n    // CASO 1: Texto descriptivo con imagen única - limpiar y extraer\n    const imageLink = allMatches[0].url;\n    \n    // Limpiar el texto removiendo la línea del link (todos los formatos)\n    let textClean = text\n      .replace(/-\\s*Link\\s+(?:Imagen|Image)\\s*:\\s*https?:\\/\\/[^\\s\\n]+\\s*/gi, '') // - Link Imagen: url\n      .replace(/-\\s*(?:Imagen|Image)\\s*\\d*\\s*:\\s*https?:\\/\\/[^\\s\\n]+\\s*/gi, '') // - Imagen N: url\n      .replace(/-\\s*\\[([^\\]]*(?:Imagen|Image)[^\\]]*)\\]\\(https?:\\/\\/[^\\)]+\\)\\s*/gi, ''); // - [Ver Imagen](url)\n    textClean = textClean.replace(/\\n+$/, '');\n    \n    out.push({\n      json: {\n        text_clean: textClean,\n        image_link: imageLink,\n        is_image_list: false,\n        ...item.json\n      }\n    });\n  }\n}\n\nreturn out;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        608
+      ],
+      "id": "86d887dc-42bc-4bc8-91fd-07d70e39b04d",
+      "name": "Limpiar mensaje2",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "syrOoH6OR19sqlmK",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/syrOoH6OR19sqlmK",
+          "cachedResultName": "Enviar Imagenes V3"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "text_clean": "={{ $json.text_clean }}",
+            "image_link": "={{ $json.image_link }}",
+            "account_id": "={{ $json.account_id }}",
+            "conversation_Id": "={{ $json.conversation_Id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "image_link",
+              "displayName": "image_link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "text_clean",
+              "displayName": "text_clean",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "account_id",
+              "displayName": "account_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "conversation_Id",
+              "displayName": "conversation_Id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": true,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2208,
+        608
+      ],
+      "id": "c9ae21c9-ecd5-4d88-b03c-6063032f9388",
+      "name": "Call 'Enviar_Imagenes V3'"
+    },
+    {
+      "parameters": {
+        "amount": 3
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2784,
+        832
+      ],
+      "id": "75fe2e12-5ba1-4c48-b5c2-712cbf325f96",
+      "name": "Wait 3 seg2",
+      "webhookId": "c5d9783e-6628-4b49-8944-b2fa9a9b2ca2"
+    },
+    {
+      "parameters": {
+        "content": "## Enviar imágenes",
+        "height": 272,
+        "width": 1008
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1936,
+        528
+      ],
+      "id": "ea1d8fe6-1f8d-4eea-8401-35dbbb4ea663",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Enviar texto",
+        "height": 240,
+        "width": 1008,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1936,
+        816
+      ],
+      "id": "549e2e1c-b005-42ab-8c52-fe16f001583c",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "# Registro lead",
+        "height": 1052,
+        "width": 1100,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -720,
+        128
+      ],
+      "id": "01accb70-fef6-4f74-9877-55c23b96ccc8",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Registro de Leads",
+          "cachedResultUrl": "https://docs.google.com/YOUR_SHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/YOUR_SHEET_URL"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Telefono",
+              "lookupValue": "={{ $json.session_Id_limpio }}"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": false
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -688,
+        224
+      ],
+      "id": "97d0fcad-b5ac-4054-8a9f-ad98d6905114",
+      "name": "Buscar Lead",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleApi": {
+          "id": "JqRz2TTtFg6JvHs3",
+          "name": "Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4e29d94c-5f24-438e-8f52-84b0139a9b73",
+              "leftValue": "={{ $json.lead_encontrado }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -656,
+        656
+      ],
+      "id": "edbb9c4b-4772-4155-82bf-c62ec7473673",
+      "name": "¿Existe Lead?"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Registro de Leads",
+          "cachedResultUrl": "https://docs.google.com/YOUR_SHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/YOUR_SHEET_URL"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $('Concatenar2').item.json.timestamp }}",
+            "Estado": "=\"En_Consulta\"",
+            "Ultima_actualizacion": "={{ $('Concatenar2').item.json.timestamp }}",
+            "Telefono": "={{ $('Concatenar2').item.json.session_Id_limpio }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nombre",
+              "displayName": "Nombre",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Telefono",
+              "displayName": "Telefono",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Tipo_propiedad",
+              "displayName": "Tipo_propiedad",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Tipo_operacion",
+              "displayName": "Tipo_operacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Zona",
+              "displayName": "Zona",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Presupuesto_min",
+              "displayName": "Presupuesto_min",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Presupuesto_max",
+              "displayName": "Presupuesto_max",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Recamaras",
+              "displayName": "Recamaras",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Amenidades",
+              "displayName": "Amenidades",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Ultima_actualizacion",
+              "displayName": "Ultima_actualizacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -240,
+        768
+      ],
+      "id": "f0693225-fa42-4752-90d5-98fe177fa9c5",
+      "name": "Crear Lead",
+      "credentials": {
+        "googleApi": {
+          "id": "JqRz2TTtFg6JvHs3",
+          "name": "Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Registro de Leads",
+          "cachedResultUrl": "https://docs.google.com/YOUR_SHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/YOUR_SHEET_URL"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Telefono",
+              "lookupValue": "={{ $json.Telefono }}"
+            },
+            {
+              "lookupColumn": "Timestamp",
+              "lookupValue": "={{ $json.Timestamp }}"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": true
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -64,
+        768
+      ],
+      "id": "314d29b3-d95c-4b3a-82d0-e7696be640a9",
+      "name": "Buscar Lead Creado",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleApi": {
+          "id": "JqRz2TTtFg6JvHs3",
+          "name": "Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// Si no hay items O el primer item está vacío, el lead no existe\nif (items.length === 0 || !items[0].json.Telefono) {\n  return [{\n    json: {\n      Telefono: null,\n      lead_encontrado: false,\n      row_number: null,\n    }\n  }];\n}\n\n// Tomar la última coincidencia (más reciente)\nconst leadMasReciente = items[items.length - 1];\n\n// Regresar un NUEVO item copiando todo y forzando row_number\nreturn [{\n  json: {\n    ...leadMasReciente.json,\n    row_number: leadMasReciente.json.row_number ?? null,\n    lead_encontrado: true,\n  },\n  pairedItem: { item: items.length - 1 },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -656,
+        432
+      ],
+      "id": "f162ff0e-b8a6-479a-98ac-6a8eb3b37310",
+      "name": "Lead mas reciente"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "71deb86a-16ed-4765-8ac6-23f900b64aa3",
+              "leftValue": "={{ $json.horas_transcurridas }}",
+              "rightValue": 24,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -240,
+        512
+      ],
+      "id": "569a44b6-a27a-4f3c-8ad4-edfcc97dce63",
+      "name": "> 24 hrs?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "79fc580f-5e75-429f-a9c5-b8a982cbf22c",
+              "name": "accion",
+              "value": "actualizar",
+              "type": "string"
+            },
+            {
+              "id": "f0ed8bc7-2456-4a5d-813d-35c73e667e53",
+              "name": "row_number",
+              "value": "={{ $json.row_number }}",
+              "type": "number"
+            },
+            {
+              "id": "3ee9b901-c937-4b56-854f-f4cffc94408e",
+              "name": "session_id",
+              "value": "={{ $json.Telefono }}",
+              "type": "string"
+            },
+            {
+              "id": "0423a8f0-9324-4f6a-8547-8f87770bd15e",
+              "name": "nombre_existente",
+              "value": "={{ $json.Nombre }}",
+              "type": "string"
+            },
+            {
+              "id": "570c4f7d-8e88-43e8-b439-fc19d3b2fa52",
+              "name": "es_lead_nuevo",
+              "value": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -32,
+        528
+      ],
+      "id": "d50da6d2-a883-4f95-a657-eecd1e495b83",
+      "name": "Preparar Actualización"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "39a9cacc-e6ba-48c3-9382-59af08716065",
+              "name": "accion",
+              "value": "crear",
+              "type": "string"
+            },
+            {
+              "id": "cf73976f-3499-4496-978c-1e8279417aa6",
+              "name": "row_number",
+              "value": "={{ $json.row_number }}",
+              "type": "number"
+            },
+            {
+              "id": "7f55ad96-4b7d-41b3-a685-b813690485a4",
+              "name": "session_id",
+              "value": "={{ $json.Telefono }}",
+              "type": "string"
+            },
+            {
+              "id": "063a58db-a201-4e13-9456-71702554e2bf",
+              "name": "es_lead_nuevo",
+              "value": true,
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        112,
+        768
+      ],
+      "id": "ddd7007e-2aee-41e7-b746-438e98ad621e",
+      "name": "Preparar Nuevo Lead"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        224,
+        320
+      ],
+      "id": "4765a62c-f43d-4f11-9ae0-22394d2d70aa",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b20623b6-5929-4238-b925-76b51b044693",
+              "name": "text",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "cce4dfbd-a61b-47fb-8390-6a7e8b03142b",
+              "name": "session_Id",
+              "value": "={{ $json.session_Id_limpio }}",
+              "type": "string"
+            },
+            {
+              "id": "dccc6ef3-5023-48c0-aa35-ea36647ddc03",
+              "name": "lead_row_number",
+              "value": "={{ $json.row_number }}",
+              "type": "number"
+            },
+            {
+              "id": "27e1d92d-ab04-4b86-b13f-58bf8c1089ea",
+              "name": "es_lead_nuevo",
+              "value": "={{ $json.es_lead_nuevo }}",
+              "type": "boolean"
+            },
+            {
+              "id": "3de392c7-1995-432f-a008-48debd208d81",
+              "name": "account_Id",
+              "value": "={{ $json.account_Id }}",
+              "type": "string"
+            },
+            {
+              "id": "d1243d58-92d9-4cc0-b748-2f0b0daf22ce",
+              "name": "conversation_Id",
+              "value": "={{ $json.conversation_Id }}",
+              "type": "string"
+            },
+            {
+              "id": "1a13ad1f-c343-4da5-b9d6-6ec6e7cdb3c0",
+              "name": "nombre_lead",
+              "value": "={{ $json.nombre_existente }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        432,
+        320
+      ],
+      "id": "9774f685-2c6d-4a08-97ae-9b3cb4812f6c",
+      "name": "Set Input"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        432,
+        1024
+      ],
+      "id": "4e05a9c5-ef29-4cfb-80ad-009e00c2ca36",
+      "name": "Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "oHOyfcbfxvKeb6YW",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        864,
+        1024
+      ],
+      "id": "61573494-3935-4867-a05c-22645cfe4ac6",
+      "name": "Model3",
+      "credentials": {
+        "openAiApi": {
+          "id": "oHOyfcbfxvKeb6YW",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SHEET_ID",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/YOUR_SHEET_URL"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.6,
+      "position": [
+        560,
+        1008
+      ],
+      "id": "c832ed5b-f51d-424a-ac83-cfaf704f1fa4",
+      "name": "Propiedades",
+      "credentials": {
+        "googleApi": {
+          "id": "JqRz2TTtFg6JvHs3",
+          "name": "Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Nodo: \"Preparar_Actualizacion_Lead\"\n// Verifica si hay datos nuevos del cliente o preferencias para actualizar el lead\n// Entrada: output de Parsear_Respuesta\n// Salida: items con bandera actualizar_lead y datos_actualizacion\n\nconst items = $input.all();\n\nreturn items.map(item => {\n  const datos = item.json.datos_cliente || {};\n  const prefs = item.json.preferencias || {};\n  \n  // 1. Verificar si hay un nombre real (no null)\n  const tieneNombre = datos.nombre !== null && datos.nombre !== '';\n  \n  // 2. Verificar si hay email\n  const tieneEmail = datos.email !== null && datos.email !== '';\n  \n  // 3. Verificar si hay preferencias nuevas (cualquiera que no sea null/vacío)\n  const tienePreferencias = \n    prefs.operacion !== null ||\n    prefs.tipo !== null ||\n    prefs.zona !== null ||\n    (prefs.presupuesto_min !== null && prefs.presupuesto_min > 0) ||\n    (prefs.presupuesto_max !== null && prefs.presupuesto_max > 0) ||\n    (prefs.habitaciones_min !== null && prefs.habitaciones_min > 0) ||\n    (prefs.habitaciones_max !== null && prefs.habitaciones_max > 0) ||\n    (Array.isArray(prefs.amenidades_deseadas) && prefs.amenidades_deseadas.length > 0) ||\n    prefs.notas_adicionales !== null;\n  \n  // 4. Si NO hay nada nuevo, pasar el item sin bandera de actualización\n  if (!tieneNombre && !tieneEmail && !tienePreferencias) {\n    return {\n      json: {\n        ...item.json,\n        actualizar_lead: false,\n        datos_actualizacion: null\n      }\n    };\n  }\n  \n  // 5. Preparar objeto de actualización (solo campos con valores reales)\n  const datos_actualizacion = {\n    row_number: datos.lead_row_number,\n    Ultima_actualizacion: $now.setZone('America/Mexico_City').toFormat('yyyy-MM-dd HH:mm:ss')\n  };\n  \n  // --- Datos del cliente ---\n  if (tieneNombre) {\n    datos_actualizacion.Nombre = datos.nombre;\n  }\n  \n  if (tieneEmail) {\n    datos_actualizacion.Email = datos.email;\n  }\n  \n  // --- Preferencias ---\n  if (prefs.operacion !== null) {\n    datos_actualizacion.Tipo_operacion = prefs.operacion;\n  }\n  \n  if (prefs.tipo !== null) {\n    datos_actualizacion.Tipo_propiedad = prefs.tipo;\n  }\n  \n  if (prefs.zona !== null) {\n    datos_actualizacion.Zona = prefs.zona;\n  }\n  \n  if (prefs.presupuesto_min !== null && prefs.presupuesto_min > 0) {\n    datos_actualizacion.Presupuesto_min = prefs.presupuesto_min.toString();\n  }\n  \n  if (prefs.presupuesto_max !== null && prefs.presupuesto_max > 0) {\n    datos_actualizacion.Presupuesto_max = prefs.presupuesto_max.toString();\n  }\n  \n  if (prefs.habitaciones_min !== null && prefs.habitaciones_min > 0) {\n    datos_actualizacion.Recamaras_min = prefs.habitaciones_min.toString();\n  }\n  \n  if (prefs.habitaciones_max !== null && prefs.habitaciones_max > 0) {\n    datos_actualizacion.Recamaras_max = prefs.habitaciones_max.toString();\n  }\n  \n  if (Array.isArray(prefs.amenidades_deseadas) && prefs.amenidades_deseadas.length > 0) {\n    datos_actualizacion.Amenidades = prefs.amenidades_deseadas.join(', ');\n  }\n  \n  if (prefs.notas_adicionales !== null) {\n    datos_actualizacion.Notas = prefs.notas_adicionales;\n  }\n  \n  return {\n    json: {\n      ...item.json,\n      actualizar_lead: true,\n      datos_actualizacion: datos_actualizacion\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1392,
+        320
+      ],
+      "id": "ae21b7b6-cdc9-404c-ad1d-cd2d162ad125",
+      "name": "Preparar Actualizacion Lead"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "878899db-2070-4390-bee9-bbb425483ae1",
+              "leftValue": "={{ $json.actualizar_lead }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1584,
+        320
+      ],
+      "id": "076dd9a4-5b9a-47b1-82c2-71830ceac19f",
+      "name": "Actualizar lead?"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Registro de Leads",
+          "cachedResultUrl": "https://docs.google.com/YOUR_SHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/YOUR_SHEET_URL"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $json.datos_actualizacion.row_number }}",
+            "Ultima_actualizacion": "={{ $json.datos_actualizacion.Ultima_actualizacion }}",
+            "Zona": "={{ $json.datos_actualizacion.Zona }}",
+            "Tipo_operacion": "={{ $json.datos_actualizacion.Tipo_operacion }}",
+            "Nombre": "={{ $json.datos_actualizacion.Nombre }}",
+            "Amenidades": "={{ $json.datos_actualizacion.Amenidades }}",
+            "Recamaras": "={{ $json.datos_actualizacion.Recamaras_min }}",
+            "Presupuesto_min": "={{ $json.datos_actualizacion.Presupuesto_min }}",
+            "Presupuesto_max": "={{ $json.datos_actualizacion.Presupuesto_max }}",
+            "Tipo_propiedad": "={{ $json.datos_actualizacion.Tipo_propiedad }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Nombre",
+              "displayName": "Nombre",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Telefono",
+              "displayName": "Telefono",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Tipo_propiedad",
+              "displayName": "Tipo_propiedad",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tipo_operacion",
+              "displayName": "Tipo_operacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Zona",
+              "displayName": "Zona",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Presupuesto_min",
+              "displayName": "Presupuesto_min",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Presupuesto_max",
+              "displayName": "Presupuesto_max",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Recamaras",
+              "displayName": "Recamaras",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Amenidades",
+              "displayName": "Amenidades",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Ultima_actualizacion",
+              "displayName": "Ultima_actualizacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1728,
+        192
+      ],
+      "id": "3e2dc10a-645d-4c40-a1ea-afa91439c649",
+      "name": "Update Lead",
+      "credentials": {
+        "googleApi": {
+          "id": "JqRz2TTtFg6JvHs3",
+          "name": "Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Code node — Run Once for All Items\n// Nombre sugerido: Parsear_Respuesta\n// Entrada: { json: { output: \"<string JSON>\" } }\n// Salida: N items (uno por cada segmento dividido por \\n\\n) con { message, part_index, parts_total, ...metadatos }\n\nconst items = $input.all();\n\n// Helpers\nconst smartToAscii = (s) =>\n  s.replace(/[\"\"„‟]/g, '\"').replace(/[''‚‛]/g, \"'\").replace(/\\u00A0/g, ' ');\n\n// Extrae el primer bloque {...} o [...] razonable\nfunction extractJsonBlock(s) {\n  if (typeof s !== 'string') return null;\n  let t = smartToAscii(s).trim();\n  // ```json ... ```\n  const fenced = t.match(/```(?:json)?\\s*([\\s\\S]*?)```/i);\n  if (fenced) t = fenced[1].trim();\n  // Primer bloque { ... } o [ ... ]\n  const start = t.search(/[\\{\\[]/);\n  if (start === -1) return null;\n  t = t.slice(start);\n  // Balanceo sencillo\n  let depth = 0, end = -1, inStr = false, esc = false;\n  const stack = [];\n  const pairs = { '{': '}', '[': ']' };\n  for (let i = 0; i < t.length; i++) {\n    const ch = t[i];\n    if (inStr) {\n      if (esc) { esc = false; }\n      else if (ch === '\\\\') { esc = true; }\n      else if (ch === '\"') { inStr = false; }\n      continue;\n    }\n    if (ch === '\"') { inStr = true; continue; }\n    if (ch === '{' || ch === '[') { stack.push(pairs[ch]); depth++; continue; }\n    if ((ch === '}' || ch === ']') && depth > 0) {\n      const expected = stack.pop();\n      if (ch !== expected) return null;\n      depth--;\n      if (depth === 0) { end = i; break; }\n    }\n  }\n  if (end === -1) return null;\n  // Quita comas colgantes simples\n  const candidate = t.slice(0, end + 1).replace(/,\\s*([}\\]])/g, '$1');\n  return candidate.trim();\n}\n\nfunction safeParse(v) {\n  if (v == null) return null;\n  if (typeof v === 'object') return v;\n  if (typeof v === 'string') {\n    const block = extractJsonBlock(v);\n    if (!block) return null;\n    try { return JSON.parse(block); } catch { return null; }\n  }\n  return null;\n}\n\nconst out = [];\n\nfor (const it of items) {\n  // 1) Capa exterior\n  const raw = it.json?.output ?? it.json ?? null;\n  let parsed = safeParse(raw) ?? {};\n  \n  // 2) Si hay otra capa en \"output\"\n  if (typeof parsed?.output === 'string') {\n    const inner = safeParse(parsed.output);\n    if (inner) parsed = inner;\n  } else if (parsed && typeof parsed?.output === 'object') {\n    parsed = parsed.output;\n  }\n  \n  // 3) Extraer el reply y dividir por \\n\\n\n  let replyText = typeof parsed?.reply === 'string' ? parsed.reply : '';\n  \n  // Convertir los \\\\n literales a saltos de línea reales\n  replyText = replyText.replace(/\\\\n/g, '\\n');\n  \n  // Dividimos por doble salto de línea\n  let parts = replyText.split('\\n\\n').filter(part => part.trim().length > 0);\n  \n  // Si no hay partes después de dividir, usar el texto completo\n  if (parts.length === 0 && replyText.trim().length > 0) {\n    parts = [replyText.trim()];\n  }\n  \n  // 4) Extraer metadatos con la NUEVA estructura\n  const meta = {\n    // Campos principales\n    intencion: parsed?.intencion ?? 'pregunta_general',\n    paso: parsed?.paso ?? '1',\n    requiere_agente_humano: Boolean(parsed?.requiere_agente_humano ?? false),\n    \n    // Datos del cliente (nueva estructura)\n    datos_cliente: {\n      lead_row_number: parsed?.datos_cliente?.lead_row_number ?? null,\n      nombre: parsed?.datos_cliente?.nombre ?? null,\n      telefono: parsed?.datos_cliente?.telefono ?? null,\n      email: parsed?.datos_cliente?.email ?? null\n    },\n    \n    // Preferencias (nueva estructura)\n    preferencias: {\n      operacion: parsed?.preferencias?.operacion ?? null,\n      tipo: parsed?.preferencias?.tipo ?? null,\n      zona: parsed?.preferencias?.zona ?? null,\n      presupuesto_min: parsed?.preferencias?.presupuesto_min ?? null,\n      presupuesto_max: parsed?.preferencias?.presupuesto_max ?? null,\n      habitaciones_min: parsed?.preferencias?.habitaciones_min ?? null,\n      habitaciones_max: parsed?.preferencias?.habitaciones_max ?? null,\n      amenidades_deseadas: Array.isArray(parsed?.preferencias?.amenidades_deseadas) \n        ? parsed.preferencias.amenidades_deseadas \n        : [],\n      notas_adicionales: parsed?.preferencias?.notas_adicionales ?? null\n    },\n    \n    // Recomendaciones (array de propiedades)\n    recomendaciones: Array.isArray(parsed?.recomendaciones) \n      ? parsed.recomendaciones \n      : []\n  };\n  \n  // 5) Si no hay parts, emite un item \"vacío\" para no romper el flujo\n  if (parts.length === 0) {\n    out.push({\n      json: {\n        message: '',\n        part_index: 0,\n        parts_total: 0,\n        ...meta\n      }\n    });\n    continue;\n  }\n  \n  // 6) Emite un item por cada parte del mensaje\n  const total = parts.length;\n  parts.forEach((msg, idx) => {\n    out.push({\n      json: {\n        message: msg.trim(),\n        part_index: idx + 1,   // 1-based\n        parts_total: total,\n        ...meta\n      }\n    });\n  });\n}\n\nreturn out;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1056,
+        320
+      ],
+      "id": "fd6c7683-5096-4d3b-a885-04f9be9ddbfb",
+      "name": "Parsear_Respuesta",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2048,
+        320
+      ],
+      "id": "4a33b9e3-959b-44ed-bbbe-8d0a8a95f4a2",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "content": "# Actualizar Lead\n\n\n",
+        "height": 380,
+        "width": 880,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        128
+      ],
+      "id": "a83335ee-29d7-4753-b357-fae95894f8a6",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1584,
+        608
+      ],
+      "id": "b66a2cb0-293a-4996-bdaf-4580a6f17959",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "678e2cee-df51-451b-a6f0-d599d9108c9d",
+              "name": "message",
+              "value": "={{ $('Preparar Actualizacion Lead').item.json.message }}",
+              "type": "string"
+            },
+            {
+              "id": "761e72f8-541c-4dc1-bd4b-f0cc863e13da",
+              "name": "part_index",
+              "value": "={{ $('Preparar Actualizacion Lead').item.json.part_index }}",
+              "type": "string"
+            },
+            {
+              "id": "c4699fd0-89de-4ed4-9196-371780077cac",
+              "name": "parts_total",
+              "value": "={{ $('Preparar Actualizacion Lead').item.json.parts_total }}",
+              "type": "number"
+            },
+            {
+              "id": "9071df34-520e-4177-8637-24f88fead56a",
+              "name": "intencion",
+              "value": "={{ $('Preparar Actualizacion Lead').item.json.intencion }}",
+              "type": "string"
+            },
+            {
+              "id": "7c4967d5-bb9b-4b62-abf5-a83714f82a76",
+              "name": "paso",
+              "value": "={{ $('Preparar Actualizacion Lead').item.json.paso }}",
+              "type": "string"
+            },
+            {
+              "id": "e74212f7-2036-4880-9ae8-bc450fa92c78",
+              "name": "datos_cliente",
+              "value": "={{ $('Preparar Actualizacion Lead').item.json.datos_cliente }}",
+              "type": "object"
+            },
+            {
+              "id": "4be58226-1a60-4b4c-9cbb-e0b4daf908af",
+              "name": "preferencias",
+              "value": "={{ $('Preparar Actualizacion Lead').item.json.preferencias }}",
+              "type": "object"
+            },
+            {
+              "id": "98203e14-704b-48ce-8e12-694ac96754de",
+              "name": "recomendaciones",
+              "value": "={{ $('Preparar Actualizacion Lead').item.json.recomendaciones }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1904,
+        192
+      ],
+      "id": "72990cbd-cee2-46d5-8cfc-1e97387e8aa7",
+      "name": "Restaurar datos mensaje"
+    },
+    {
+      "parameters": {
+        "content": "## División de respuesta\n",
+        "height": 528,
+        "width": 576,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        528
+      ],
+      "id": "9a4062c3-5d1a-4196-a954-34a762d98ce5",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nreturn items.map((item) => {\n  const ultimaActualizacion = item.json.Ultima_actualizacion;\n  \n  const ahora = new Date();\n  const ultimaFecha = new Date(ultimaActualizacion.replace(' ', 'T') + '-06:00');\n  \n  const diferenciaMs = ahora - ultimaFecha;\n  const diferenciaHoras = diferenciaMs / (1000 * 60 * 60);\n  \n  return {\n    json: {\n      ...item.json,\n      horas_transcurridas: diferenciaHoras,\n      row_number: item.json.row_number ?? null,\n    },\n    pairedItem: item.pairedItem ?? { item: 0 },\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -416,
+        512
+      ],
+      "id": "5af8766d-c7b6-4672-98f3-e970e9b735cb",
+      "name": "Calcular Tiempo 24hrs"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "delete",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Registro de Leads",
+          "cachedResultUrl": "https://docs.google.com/YOUR_SHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/YOUR_SHEET_URL"
+        },
+        "startIndex": "={{ $json.row_number }}"
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        816,
+        -112
+      ],
+      "id": "a5a7a6c6-e93e-45fa-86db-c6cdff8c308d",
+      "name": "Delete rows or columns from sheet",
+      "credentials": {
+        "googleApi": {
+          "id": "JqRz2TTtFg6JvHs3",
+          "name": "Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Registro de Leads",
+          "cachedResultUrl": "https://docs.google.com/YOUR_SHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/YOUR_SHEET_URL"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Telefono",
+              "lookupValue": "={{ $('Mapeo de mensaje').item.json.sender.replace('+', '') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -176,
+        -320
+      ],
+      "id": "de5b4bdc-3a78-4ebb-b6b9-e276573703a2",
+      "name": "Get row(s) in sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleApi": {
+          "id": "JqRz2TTtFg6JvHs3",
+          "name": "Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        384,
+        -128
+      ],
+      "id": "ba6638be-cfc2-4d78-9956-54d134e7a077",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1008,
+        -112
+      ],
+      "id": "22f9f917-d787-4687-b7f9-6f3f215f23f0",
+      "name": "Wait1",
+      "webhookId": "18383cd1-8122-423f-af39-e046f1a46d69"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Registro de Leads",
+          "cachedResultUrl": "https://docs.google.com/YOUR_SHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/YOUR_SHEET_URL"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Telefono",
+              "lookupValue": "={{ $('Mapeo de mensaje').item.json.sender.replace('+', '') }}"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": true
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        608,
+        -112
+      ],
+      "id": "d3de9156-ffa6-45c7-8032-ca51b7b05d15",
+      "name": "Get row(s) in sheet1",
+      "credentials": {
+        "googleApi": {
+          "id": "JqRz2TTtFg6JvHs3",
+          "name": "Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f88c10c6-dbb2-445a-b289-5c4bb0aef4dd",
+              "leftValue": "={{ $json.lead_encontrado }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        192,
+        -320
+      ],
+      "id": "a80b1a1f-53dc-4cb3-8009-c5e3c0745810",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// Si no hay items O el primer item está vacío, el lead no existe\nif (items.length === 0 || !items[0].json.Telefono) {\n  return [{\n    json: {\n      Telefono: null,\n      lead_encontrado: false,\n      row_number: null,\n    }\n  }];\n}\n\n// Tomar la última coincidencia (más reciente)\nconst leadMasReciente = items[items.length - 1];\n\n// Regresar un NUEVO item copiando todo y forzando row_number\nreturn [{\n  json: {\n    ...leadMasReciente.json,\n    row_number: leadMasReciente.json.row_number ?? null,\n    lead_encontrado: true,\n  },\n  pairedItem: { item: items.length - 1 },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        16,
+        -320
+      ],
+      "id": "29436ebc-8b48-4723-adf0-3ac2d60e4cad",
+      "name": "Lead mas reciente1"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2416,
+        608
+      ],
+      "id": "bb95a8a0-0790-40e3-a221-5fc3cc0958a2",
+      "name": "Wait2",
+      "webhookId": "bcbdd99f-8068-4c60-9899-581e5afa5091"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Mapear datos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mapear datos": {
+      "main": [
+        [
+          {
+            "node": "¿Es mensaje entrante?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Get Audio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mapeo de mensaje",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "¿Es mensaje entrante?": {
+      "main": [
+        [
+          {
+            "node": "Control humano?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mensaje saliente del agente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mapeo de mensaje": {
+      "main": [
+        [
+          {
+            "node": "RESET",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch2": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Delete_buffer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Get_buffer_data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buffer": {
+      "main": [
+        [
+          {
+            "node": "Get_buffer_data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get_buffer_data": {
+      "main": [
+        [
+          {
+            "node": "Normalize message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete_buffer": {
+      "main": [
+        [
+          {
+            "node": "Concatenar2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize message": {
+      "main": [
+        [
+          {
+            "node": "Switch2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Audio": {
+      "main": [
+        [
+          {
+            "node": "Audio a texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Audio a texto": {
+      "main": [
+        [
+          {
+            "node": "Texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Texto": {
+      "main": [
+        [
+          {
+            "node": "Mapeo de mensaje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Control humano?": {
+      "main": [
+        [
+          {
+            "node": "No responde el Agente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RESET": {
+      "main": [
+        [
+          {
+            "node": "Delete_buffer2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Buffer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete table or rows": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete_buffer2": {
+      "main": [
+        [
+          {
+            "node": "Delete table or rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente REA",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "crear_cita": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agendador",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ver_eventos": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agendador",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "eliminar_cita": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agendador",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Base_de_datos": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente REA",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agendador": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente REA",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Agente REA",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "Agendador",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "Base_de_datos",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente REA": {
+      "main": [
+        [
+          {
+            "node": "Parsear_Respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Input": {
+      "main": [
+        [
+          {
+            "node": "Imagen?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Respuesta": {
+      "main": [
+        [
+          {
+            "node": "Wait 3 seg2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Imagen?": {
+      "main": [
+        [
+          {
+            "node": "Limpiar mensaje2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limpiar mensaje2": {
+      "main": [
+        [
+          {
+            "node": "Call 'Enviar_Imagenes V3'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Enviar_Imagenes V3'": {
+      "main": [
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 3 seg2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Lead": {
+      "main": [
+        [
+          {
+            "node": "Lead mas reciente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Existe Lead?": {
+      "main": [
+        [
+          {
+            "node": "Calcular Tiempo 24hrs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Crear Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crear Lead": {
+      "main": [
+        [
+          {
+            "node": "Buscar Lead Creado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead mas reciente": {
+      "main": [
+        [
+          {
+            "node": "¿Existe Lead?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Lead Creado": {
+      "main": [
+        [
+          {
+            "node": "Preparar Nuevo Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "> 24 hrs?": {
+      "main": [
+        [
+          {
+            "node": "Crear Lead",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Preparar Actualización",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Actualización": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Preparar Nuevo Lead": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Set Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Input": {
+      "main": [
+        [
+          {
+            "node": "Agente REA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Base_de_datos",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agendador",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Propiedades": {
+      "ai_tool": [
+        [
+          {
+            "node": "Base_de_datos",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Actualizacion Lead": {
+      "main": [
+        [
+          {
+            "node": "Actualizar lead?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Actualizar lead?": {
+      "main": [
+        [
+          {
+            "node": "Update Lead",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Parsear_Respuesta": {
+      "main": [
+        [
+          {
+            "node": "Preparar Actualizacion Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Lead": {
+      "main": [
+        [
+          {
+            "node": "Restaurar datos mensaje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Restaurar datos mensaje": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calcular Tiempo 24hrs": {
+      "main": [
+        [
+          {
+            "node": "> 24 hrs?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Lead mas reciente1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Confirmación RESET",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get row(s) in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete rows or columns from sheet": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Delete rows or columns from sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Concatenar2": {
+      "main": [
+        [
+          {
+            "node": "Buscar Lead",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Confirmación RESET",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead mas reciente1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timeSavedMode": "fixed",
+    "timezone": "America/Mexico_City",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "binaryMode": "separate"
+  },
+  "pinData": {}
+}

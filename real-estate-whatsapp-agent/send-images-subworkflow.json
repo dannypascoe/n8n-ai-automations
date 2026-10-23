@@ -1,0 +1,288 @@
+{
+  "name": "Enviar Imagenes V3",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "image_link"
+            },
+            {
+              "name": "text_clean"
+            },
+            {
+              "name": "account_id"
+            },
+            {
+              "name": "conversation_Id"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -80,
+        -48
+      ],
+      "id": "cb2bfe35-472d-4643-a444-5326550d9d5c",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.link }}",
+          "mode": "url"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        320,
+        -48
+      ],
+      "id": "169fff79-f699-480a-9b2a-fdf2af619db3",
+      "name": "Download file2",
+      "credentials": {
+        "googleApi": {
+          "id": "JqRz2TTtFg6JvHs3",
+          "name": "Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://YOUR_CHATWOOT_HOST/api/v1/accounts/{{ $('Mapeo').item.json.account_id }}/conversations/{{ $('Mapeo').item.json.conversation_id }}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api_access_token",
+              "value": "YOUR_CHATWOOT_TOKEN"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message_type",
+              "value": "outgoing"
+            },
+            {
+              "name": "content",
+              "value": "={{ $json.texto || \"\"}}"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "attachments[]",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        704,
+        -48
+      ],
+      "id": "484cafa0-c4e9-46d0-9acd-9dff3d2e8ea0",
+      "name": "Send Image1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "54551050-1d47-45a1-af26-88380746ceb8",
+              "name": "account_id",
+              "value": "={{ $json.account_id }}",
+              "type": "string"
+            },
+            {
+              "id": "b4ef330d-50be-48f1-bc53-ff45d8fe9253",
+              "name": "conversation_id",
+              "value": "={{ $json.conversation_Id }}",
+              "type": "string"
+            },
+            {
+              "id": "3f411a7e-4fc2-480d-adb9-8124745faf87",
+              "name": "link",
+              "value": "={{ $json.image_link }}",
+              "type": "string"
+            },
+            {
+              "id": "cb7a4949-e8f1-44df-a568-14bce40a93ce",
+              "name": "texto",
+              "value": "={{ $json.text_clean }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        128,
+        -48
+      ],
+      "id": "60c0615d-d2a1-467e-a19a-8b9a19fd74ea",
+      "name": "Mapeo"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        512,
+        -48
+      ],
+      "id": "97c13bef-98c2-4b82-9a9c-8e4b52a642e9",
+      "name": "Wait 1 seg",
+      "webhookId": "6b0cdb7b-9d80-4f9a-94fa-0c85552cef14"
+    },
+    {
+      "parameters": {
+        "amount": 3.5
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        912,
+        -48
+      ],
+      "id": "ea06fe29-123d-46b1-ac07-8bb9e63d31b3",
+      "name": "Wait 3 seg",
+      "webhookId": "6b0cdb7b-9d80-4f9a-94fa-0c85552cef14"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "15bc0850-b5a0-4a4a-82f5-45fb8663cf7d",
+              "name": "image_link",
+              "value": "={{ $('When Executed by Another Workflow').item.json.image_link }}\"",
+              "type": "string"
+            },
+            {
+              "id": "cdeeef92-d74b-4205-aaee-dd2fb871e62f",
+              "name": "text_clean",
+              "value": "={{ $('When Executed by Another Workflow').item.json.text_clean }}",
+              "type": "string"
+            },
+            {
+              "id": "3b98c114-e2d8-403b-8926-8c09f526c013",
+              "name": "account_id",
+              "value": "={{ $('When Executed by Another Workflow').item.json.account_id }}",
+              "type": "string"
+            },
+            {
+              "id": "e958062c-6105-4a3e-91df-3a805c701dc4",
+              "name": "conversation_id",
+              "value": "={{ $('When Executed by Another Workflow').item.json.conversation_Id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1120,
+        -48
+      ],
+      "id": "15e53de2-e78d-45d2-8667-a26acbc4b227",
+      "name": "Edit Fields"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Mapeo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file2": {
+      "main": [
+        [
+          {
+            "node": "Wait 1 seg",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mapeo": {
+      "main": [
+        [
+          {
+            "node": "Download file2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 1 seg": {
+      "main": [
+        [
+          {
+            "node": "Send Image1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Image1": {
+      "main": [
+        [
+          {
+            "node": "Wait 3 seg",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 3 seg": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timeSavedMode": "fixed",
+    "timezone": "America/Mexico_City",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "pinData": {}
+}

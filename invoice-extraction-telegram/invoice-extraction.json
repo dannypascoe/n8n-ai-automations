@@ -1,0 +1,1262 @@
+{
+  "name": "Agente_Facturas_G-PARTS",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -704,
+        224
+      ],
+      "id": "b2cbe488-cf34-419f-89d2-7cfb981e8cec",
+      "name": "Telegram Trigger",
+      "webhookId": "637b203f-a961-4268-888c-9d927f7506b6",
+      "credentials": {
+        "telegramApi": {
+          "id": "RnZHSAHmPJ7BDShx",
+          "name": "Facturas_Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.tipo_mensaje }}",
+                    "rightValue": "image",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "7d186a02-946e-4fdd-9d80-f6a823c64d74"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Imagen"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b4ed0d38-3a1a-4a95-8281-1ac510f4fed4",
+                    "leftValue": "={{ $json.tipo_mensaje }}",
+                    "rightValue": "pdf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PDF"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "93559e76-a12a-4e5c-97a1-fd872bd51327",
+                    "leftValue": "={{ $json.tipo_mensaje }}",
+                    "rightValue": "text",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Text"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -272,
+        208
+      ],
+      "id": "161d3182-8da4-40b8-8e95-1062490a87bd",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "content": "## OCR Open AI\n**Herramienta** Análisis de imagen. (SOLO PARA IMÁGENES)",
+        "height": 240,
+        "width": 1136
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -944,
+        -288
+      ],
+      "id": "17e88b0b-1a1b-4a78-9d16-f936ecf25486",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Query\n**Dentro de google sheets**",
+        "height": 208,
+        "width": 288,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        -592
+      ],
+      "id": "0b1c87da-3574-4bd5-a69b-18f93e117875",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "753386e4-7d42-4259-bdd9-34527c1ed8e7",
+              "name": "file_id",
+              "value": "={{ $json.message?.voice?.file_id    || ($json.message?.photo?.length ? $json.message.photo[$json.message.photo.length - 1].file_id : '')    || $json.message?.audio?.file_id    || $json.message?.document?.file_id    || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "4103fee4-e718-4797-b43c-f6fe4bccbd3a",
+              "name": "tipo_mensaje",
+              "value": "={{ \n  $json.message?.voice ? 'voice'\n  : ($json.message?.photo?.length ? 'image'\n  : ($json.message?.document \n      ? ($json.message.document.mime_type?.startsWith('image/') ? 'image'\n        : ($json.message.document.mime_type?.includes('pdf') ? 'pdf'\n        : ($json.message.document.mime_type?.startsWith('video/') ? 'video'\n        : 'document')))\n  : ($json.message?.text ? 'text' : 'unknown')))\n}}",
+              "type": "string"
+            },
+            {
+              "id": "f14f99ef-5020-4f8c-96f6-679c15d024d7",
+              "name": "text_raw",
+              "value": "={{ $json.message?.text || $json.message?.caption || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "013adc0d-13d0-4b75-aaf4-b08c8d125099",
+              "name": "chat_id",
+              "value": "={{ $json.message.chat.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -480,
+        224
+      ],
+      "id": "a222a839-9465-436a-940b-2af894a10557",
+      "name": "Mapeo_campos_mensaje"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SHEET_ID",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 884117890,
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/YOUR_SHEET_URL"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "No_parte": "={{ $json.No_parte }}",
+            "No. factura": "={{ $json.No_factura }}",
+            "Fecha factura": "={{ $json.fecha }}",
+            "Proveedor": "={{ $json.proveedor }}",
+            "Concepto": "={{ $json.concepto }}",
+            "Cantidad": "={{ $json.cantidad }}",
+            "Precio Unitario": "={{ $json.precio_unitario }}",
+            "Categoria": "={{ $json.categoria }}",
+            "Subtotal": "={{ $json.subtotal }}",
+            "IVA": "={{ $json.iva }}",
+            "Total": "={{ $json.total }}",
+            "Moneda": "={{ $json.moneda }}",
+            "Metodo de Pago": "={{ $json.metodo_pago }}",
+            "Vencimiento Credito": "={{ $json.vencimiento_credito }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "No. factura",
+              "displayName": "No. factura",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Fecha factura",
+              "displayName": "Fecha factura",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Proveedor",
+              "displayName": "Proveedor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "No_parte",
+              "displayName": "No_parte",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Concepto",
+              "displayName": "Concepto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Cantidad",
+              "displayName": "Cantidad",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Precio Unitario",
+              "displayName": "Precio Unitario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Categoria",
+              "displayName": "Categoria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Subtotal",
+              "displayName": "Subtotal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "IVA",
+              "displayName": "IVA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Total",
+              "displayName": "Total",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Moneda",
+              "displayName": "Moneda",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Metodo de Pago",
+              "displayName": "Metodo de Pago",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Vencimiento Credito",
+              "displayName": "Vencimiento Credito",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Enlace factura",
+              "displayName": "Enlace factura",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        144,
+        432
+      ],
+      "id": "2ddabaa4-b99b-4e29-8dd6-d1a9e31844de",
+      "name": "Registrar Datos Factura",
+      "credentials": {
+        "googleApi": {
+          "id": "JqRz2TTtFg6JvHs3",
+          "name": "Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "=data",
+        "name": "=Factura_{{ $('Mapeo Campos Factura').item.json.proveedor }}_{{ $('Mapeo Campos Factura').item.json.fecha }}",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/YOUR_FOLDER_URL"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "YOUR_FOLDER_ID",
+          "mode": "list"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        560,
+        432
+      ],
+      "id": "9fe33c64-2d18-4de5-b55a-8166cade41d2",
+      "name": "Cargar factura",
+      "executeOnce": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "at05iMT8l0qfsleQ",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        176,
+        624
+      ],
+      "id": "4521445f-4621-44c5-a338-5f59b86c5e65",
+      "name": "Wait",
+      "webhookId": "318c9e1b-61f0-41cb-94b3-630f78229626"
+    },
+    {
+      "parameters": {
+        "resource": "document",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "text": "=Eres un analizador experto en facturas. \nDebes leer imágenes o PDF de facturas (una o varias páginas) y devolver **SOLO** un **JSON válido** (sin backticks, sin texto adicional, sin markdown).  \nDebes procesar TODO el documento aunque tenga varias páginas.\n\nLa estructura y las reglas son las siguientes:\n\n{\n  \"No_factura\": string,                // número o código visible (Puede contener Letras y Numeros), NO uses el Folio Fiscal.\n  \"fecha\": \"YYYY-MM-DD\" | \"\",          // formato ISO; si no aparece clara, devuelve \"\"\n  \"proveedor\": string,                 // nombre comercial de la EMPRESA que expide la factura (UBICALO POR EL LOGO)\n  \"moneda\": \"MXN\" | \"USD\" | \"\",        // si no se especifica, devuelve \"\"\n  \"metodo_pago\": string,               // ejemplos: \"transferencia\", \"efectivo\", \"tarjeta\", \"crédito\", \"PUE\", \"PPD\", \"otros\"\n  \"vencimiento_credito\": \"YYYY-MM-DD\" | null,  // solo aplica si el método de pago indica crédito o PPD; si es PUE, efectivo, contado o transferencia, devuelve null\n  \"subtotal\": number,                  // usa punto decimal y redondea a 2 decimales\n  \"iva\": number,                       // tambien puede venir como \"VAT\" pero si no aparece, calcula: iva = total - subtotal\n  \"total\": number,                     // monto total\n  \"articulos\": [\n    {\n      \"No_parte\": string,              // código o clave del producto\n      \"concepto\": string,              // descripción breve del producto o servicio\n      \"cantidad\": number,              // cantidad o unidades del artículo\n      \"precio_unitario\": number,       // valor unitario (usa punto decimal)\n      \"categoria\": string              // tipo general (ej. Kit, Servicio, Refacción, etc.)\n    }\n  ]\n}\n\nReglas generales:\n- Devuelve SIEMPRE un JSON válido, aunque falten datos o haya solo un artículo.\n- No inventes información: si un dato no está claro, deja \"\" o null según corresponda.\n- Si la factura no muestra desglose de IVA, estima: subtotal ≈ total / 1.16 y calcula iva = total - subtotal.\n- Para los precios, SIEMPRE usa punto decimal (no coma) y redondea a 2 decimales.\n- Si hay varios artículos, incluye todos en el arreglo `\"articulos\"`.\n- No incluyas texto extra, explicaciones ni comentarios fuera del JSON.\n- Si el documento parece un ticket o nota sin número de factura, devuelve `\"No_factura\": \"\"`.\n- En el proveedor dale prioridad siempre al nombre de la empresa que viene con su logo normalmente.",
+        "inputType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        224,
+        208
+      ],
+      "id": "6aa2a220-034f-4f71-8660-bd0bbe5c628e",
+      "name": "Analyze document",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Os8qXUm8oI7rlwAm",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Extraccion PDF sin OCR ",
+        "height": 336,
+        "width": 1232,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        816,
+        -384
+      ],
+      "id": "51fcc1e5-7dd0-4123-adea-0bba2d366b99",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Facturas_G-PARTS",
+          "cachedResultUrl": "https://docs.google.com/YOUR_SHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 884117890,
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/YOUR_SHEET_URL"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $json.row_number }}",
+            "Enlace factura": "={{ $('Cargar factura').item.json.webViewLink }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "No. factura",
+              "displayName": "No. factura",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Fecha factura",
+              "displayName": "Fecha factura",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Proveedor",
+              "displayName": "Proveedor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "No_parte",
+              "displayName": "No_parte",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Concepto",
+              "displayName": "Concepto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Cantidad",
+              "displayName": "Cantidad",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Precio Unitario",
+              "displayName": "Precio Unitario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Categoria",
+              "displayName": "Categoria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Subtotal",
+              "displayName": "Subtotal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "IVA",
+              "displayName": "IVA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Total",
+              "displayName": "Total",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Moneda",
+              "displayName": "Moneda",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Metodo de Pago",
+              "displayName": "Metodo de Pago",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Vencimiento Credito",
+              "displayName": "Vencimiento Credito",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Enlace factura",
+              "displayName": "Enlace factura",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        944,
+        432
+      ],
+      "id": "83077afe-5729-4a2f-85ef-5e4cfb3d4994",
+      "name": "Poner Link Drive",
+      "credentials": {
+        "googleApi": {
+          "id": "JqRz2TTtFg6JvHs3",
+          "name": "Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').first().json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1696,
+        432
+      ],
+      "id": "1320494d-4693-4e62-8267-88fd49f3f67d",
+      "name": "Mensaje Confirmacion",
+      "webhookId": "aa76676b-12ae-46f2-9644-12b38f9de92d",
+      "executeOnce": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "RnZHSAHmPJ7BDShx",
+          "name": "Facturas_Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        16,
+        208
+      ],
+      "id": "6c7c8149-b4cb-4885-9755-55b3d9889b17",
+      "name": "Descargar_archivo",
+      "webhookId": "ec6eb4d0-00d7-46c5-9e14-f73303b927dd",
+      "credentials": {
+        "telegramApi": {
+          "id": "RnZHSAHmPJ7BDShx",
+          "name": "Facturas_Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1️⃣ Tomar el texto del JSON generado por Gemini\nlet raw = $json.content?.parts?.[0]?.text || \"\";\n\n// 2️⃣ Limpiar: quitar backticks, etiquetas ```json y espacios\nraw = raw\n  .replace(/```json/gi, \"\")\n  .replace(/```/g, \"\")\n  .trim();\n\n// 3️⃣ Intentar parsear el texto a objeto JSON\nlet factura;\ntry {\n  factura = JSON.parse(raw);\n} catch (error) {\n  throw new Error(\"❌ No se pudo convertir el texto a JSON válido.\\nContenido recibido:\\n\" + raw);\n}\n\n// 4️⃣ Campos generales de la factura\nconst generales = {\n  No_factura: factura.No_factura || \"\",\n  fecha: factura.fecha || \"\",\n  proveedor: factura.proveedor || \"\",\n  subtotal: factura.subtotal || \"\",\n  iva: factura.iva || \"\",\n  total: factura.total || \"\",\n  moneda: factura.moneda || \"\",\n  metodo_pago: factura.metodo_pago || \"\",\n  vencimiento_credito: factura.vencimiento_credito || null,\n};\n\n// 5️⃣ Crear items por cada artículo\nconst items = [];\nfor (const art of factura.articulos || []) {\n  items.push({\n    json: {\n      ...generales,\n      No_parte: art.No_parte || \"\",\n      concepto: art.concepto || \"\",\n      cantidad: art.cantidad || \"\",\n      precio_unitario: art.precio_unitario || \"\",\n      categoria: art.categoria || \"\",\n    },\n  });\n}\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        208
+      ],
+      "id": "4e1ef27a-55da-486b-8081-b0c9f482fb7b",
+      "name": "Limpiar JSON"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b550966d-811a-46e6-a43d-4148547367ec",
+              "name": "No_factura",
+              "value": "={{ $json.No_factura }}",
+              "type": "string"
+            },
+            {
+              "id": "01a9fb4a-1f7b-46dd-a568-6dcc6fa68ba1",
+              "name": "fecha",
+              "value": "={{ $('Limpiar JSON').item.json.fecha }}",
+              "type": "string"
+            },
+            {
+              "id": "80e16cc9-286b-4dc6-bc12-cc418ff140cb",
+              "name": "proveedor",
+              "value": "={{ $json.proveedor }}",
+              "type": "string"
+            },
+            {
+              "id": "77d8965c-54e0-495c-8b45-520bb906935f",
+              "name": "No_parte",
+              "value": "={{ $('Limpiar JSON').item.json.No_parte }}",
+              "type": "string"
+            },
+            {
+              "id": "9f5a17fd-3035-4214-9788-a6ab93bafdb4",
+              "name": "concepto",
+              "value": "={{ $('Limpiar JSON').item.json.concepto }}",
+              "type": "string"
+            },
+            {
+              "id": "6526c78b-166e-4be7-9ccf-068be3b7c3fe",
+              "name": "precio_unitario",
+              "value": "={{ $('Limpiar JSON').item.json.precio_unitario }}",
+              "type": "number"
+            },
+            {
+              "id": "1536288c-0b3d-4cd7-81b9-6a880f9f29f0",
+              "name": "categoria",
+              "value": "={{ $('Limpiar JSON').item.json.categoria }}",
+              "type": "string"
+            },
+            {
+              "id": "6464b8d6-a291-4763-abc4-92ec5bee250a",
+              "name": "subtotal",
+              "value": "={{ $('Limpiar JSON').item.json.subtotal }}",
+              "type": "number"
+            },
+            {
+              "id": "c7bf4951-b4c0-46cd-8aa2-695f00344aba",
+              "name": "iva",
+              "value": "={{ $('Limpiar JSON').item.json.iva }}",
+              "type": "number"
+            },
+            {
+              "id": "a673c22a-488d-4cfa-b7fa-e46ca015c29c",
+              "name": "total",
+              "value": "={{ $('Limpiar JSON').item.json.total }}",
+              "type": "number"
+            },
+            {
+              "id": "e972b1e5-c020-42cc-b9c6-9866e87cb682",
+              "name": "moneda",
+              "value": "={{ $('Limpiar JSON').item.json.moneda }}",
+              "type": "string"
+            },
+            {
+              "id": "c7bfe048-c163-4dfa-be73-b9e62663da8c",
+              "name": "metodo_pago",
+              "value": "={{ $('Limpiar JSON').item.json.metodo_pago }}",
+              "type": "string"
+            },
+            {
+              "id": "a064cae0-f6fb-43b3-b964-ce3baec634e8",
+              "name": "vencimiento_credito",
+              "value": "={{ $('Limpiar JSON').item.json.vencimiento_credito }}",
+              "type": "string"
+            },
+            {
+              "id": "d456f582-b418-498d-aac0-dec534e32614",
+              "name": "cantidad",
+              "value": "={{ $json.cantidad }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        640,
+        208
+      ],
+      "id": "a77e77cd-27c5-46c8-b638-223037f390d8",
+      "name": "Mapeo Campos Factura"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $('Mapeo_campos_mensaje').item.json.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        368,
+        432
+      ],
+      "id": "596eac53-84ee-4265-bf60-59246b606773",
+      "name": "Descargar_archivo_2",
+      "webhookId": "d5152058-548d-471a-b972-285052bfc1ac",
+      "executeOnce": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "RnZHSAHmPJ7BDShx",
+          "name": "Facturas_Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Facturas_G-PARTS",
+          "cachedResultUrl": "https://docs.google.com/YOUR_SHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 884117890,
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/YOUR_SHEET_URL"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "No. factura",
+              "lookupValue": "={{ $('Mapeo Campos Factura').item.json.No_factura }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        752,
+        432
+      ],
+      "id": "32c2ce14-4098-4c79-a8d3-5539a030dc17",
+      "name": "Get row",
+      "credentials": {
+        "googleApi": {
+          "id": "JqRz2TTtFg6JvHs3",
+          "name": "Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').first().json.message.chat.id }}",
+        "text": "Hola! 😊 Por el momento solo puedo recibir archivos como imágenes o pdfs para registrar tus facturas 📄",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        384,
+        624
+      ],
+      "id": "d174f22b-aa85-421c-a77a-6544d2aadb98",
+      "name": "Mensaje solo texto",
+      "webhookId": "d32407a2-26ce-4a30-b506-1b0c2a153f11",
+      "credentials": {
+        "telegramApi": {
+          "id": "RnZHSAHmPJ7BDShx",
+          "name": "Facturas_Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=[Datos de la factura]\nNumero de factura: {{ $json['# Factura'] }}\nProveedor: {{ $json.Proveedor }}\nFecha de factura: {{ $json['Fecha factura'] }}\nTotal: {{ $json.Total }}\nNombre del archivo: {{ $json['Nombre Archivo Drive'] }}\nLink de la base de datos: https://docs.google.com/YOUR_SHEET_URL",
+        "options": {
+          "systemMessage": "=# Rol\nEres un asistente de confirmación de facturas. Tu única tarea es generar un mensaje de confirmación breve, claro y amable para el usuario, indicando que su factura fue registrada exitosamente en el sistema.\n\n# Instrucciones\n1. Usa los datos exactos del mensaje del usuario.\n2. Formatea el monto con 2 decimales, comas para miles y símbolo $.\n3. Usa HTML para formato: <b>texto</b> para negritas y <a href=\"url\">texto</a> para links.\n4. No agregues información extra.\n\n# Formato de salida (usa exactamente este formato HTML)\n¡La factura ha sido registrada correctamente! 🧾\n\n- <b>Número de factura:</b> [número]\n- <b>Proveedor:</b> [proveedor]\n- <b>Fecha de factura:</b> [fecha]\n- <b>Monto total:</b> $[monto con 2 decimales y comas] MXN\n\nFue cargada al sistema con el nombre: <b>[nombre del archivo]</b>.\n\nPuedes consultar todas tus facturas 👉 <a href=\"[link]\">aquí</a>"
+        }
+      },
+      "id": "909b368b-6226-4f8b-adf6-f4a958ad3b49",
+      "name": "Invoice Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        1360,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1280,
+        656
+      ],
+      "id": "947ce642-2082-4005-91fb-b9ab58bdb6cd",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "oHOyfcbfxvKeb6YW",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Telegram Trigger').item.json.message.chat.id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1440,
+        656
+      ],
+      "id": "2734f80e-7e42-4c7c-ba27-93f37e3912e1",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "79c39422-27a7-41d5-a293-87eedd22e885",
+              "name": "# Factura",
+              "value": "={{ $('Get row').item.json['No. factura'] }}",
+              "type": "string"
+            },
+            {
+              "id": "218fb958-7b03-4fe9-b566-c8a145b8ef72",
+              "name": "Fecha factura",
+              "value": "={{ $('Get row').item.json['Fecha factura'] }}",
+              "type": "string"
+            },
+            {
+              "id": "c0d8b03b-7760-4153-bbe5-16458ef680e6",
+              "name": "Proveedor",
+              "value": "={{ $('Get row').item.json.Proveedor }}",
+              "type": "string"
+            },
+            {
+              "id": "8d8e59fc-72a0-442c-b893-44c02f631eab",
+              "name": "Total",
+              "value": "={{ $('Get row').item.json.Total }}",
+              "type": "number"
+            },
+            {
+              "id": "ba186b64-d0c4-4e6a-802c-0c16721526b1",
+              "name": "Nombre Archivo Drive",
+              "value": "={{ $('Cargar factura').item.json.name }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1136,
+        432
+      ],
+      "id": "ab71efba-7f58-4490-ab03-d2fb424e8179",
+      "name": "Datos factura",
+      "executeOnce": true
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Mapeo_campos_mensaje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Descargar_archivo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Descargar_archivo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mapeo_campos_mensaje": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar Datos Factura": {
+      "main": [
+        [
+          {
+            "node": "Descargar_archivo_2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cargar factura": {
+      "main": [
+        [
+          {
+            "node": "Get row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Mensaje solo texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze document": {
+      "main": [
+        [
+          {
+            "node": "Limpiar JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Poner Link Drive": {
+      "main": [
+        [
+          {
+            "node": "Datos factura",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Descargar_archivo": {
+      "main": [
+        [
+          {
+            "node": "Analyze document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limpiar JSON": {
+      "main": [
+        [
+          {
+            "node": "Mapeo Campos Factura",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mapeo Campos Factura": {
+      "main": [
+        [
+          {
+            "node": "Registrar Datos Factura",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Descargar_archivo_2": {
+      "main": [
+        [
+          {
+            "node": "Cargar factura",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row": {
+      "main": [
+        [
+          {
+            "node": "Poner Link Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Invoice Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Invoice Agent": {
+      "main": [
+        [
+          {
+            "node": "Mensaje Confirmacion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Invoice Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Datos factura": {
+      "main": [
+        [
+          {
+            "node": "Invoice Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Mexico_City",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "pinData": {}
+}
